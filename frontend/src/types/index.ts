@@ -42,7 +42,7 @@ export interface Certificate {
   hoursClaimed: number;
   status: CertificateStatus;
   fileUrl: string;
-  ocrExtractedData?: Record<string, any>;
+  ocrExtractedData?: Record<string, unknown>;
   aiFlags?: { duplicate: boolean; fakeRisk: boolean };
 }
 
