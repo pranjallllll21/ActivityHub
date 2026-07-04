@@ -1,0 +1,237 @@
+// ActivityHub - Prisma Schema
+// AI-powered student activity management system for engineering colleges
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  COMMITTEE
+  FACULTY
+  HOD
+}
+
+enum EventStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum EventCategory {
+  TECHNICAL
+  CULTURAL
+  SPORTS_NSS
+}
+
+enum AttendanceMethod {
+  QR
+  EXCEL
+}
+
+enum CertificateStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CreditSource {
+  EVENT
+  CERTIFICATE
+}
+
+enum NotificationType {
+  EVENT_CREATED
+  EVENT_APPROVED
+  EVENT_REJECTED
+  REGISTRATION_CONFIRMED
+  ATTENDANCE_RECORDED
+  CERTIFICATE_UPLOADED
+  CERTIFICATE_APPROVED
+  CERTIFICATE_REJECTED
+  CREDIT_ALLOCATED
+  GENERAL
+}
+
+// ─── Models ─────────────────────────────────────────────────────────────────────
+
+/// User model — supports Students, Committee members, Faculty, and HODs.
+/// Students can have a mentor (faculty), and faculty can mentor clubs.
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  passwordHash  String
+  role          Role     @default(STUDENT)
+  department    String
+  division      String?  // e.g., "A", "B" for students
+  rollNo        String?  // student roll number
+  avatar        String?  // URL to avatar image
+  status        String   @default("active") // active, inactive, suspended
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Self-referential mentor relationship
+  mentor          User?          @relation("MentorStudents", fields: [mentorId], references: [id])
+  mentorId        String?
+  mentees         User[]         @relation("MentorStudents")
+
+  // Club relationships
+  clubMemberships Club[]         @relation("ClubMembers")
+  mentorOfClubs   Club[]         @relation("ClubFacultyMentor")
+
+  // Activity relationships
+  registrations   Registration[]
+  attendances     Attendance[]
+  certificates    Certificate[]  @relation("StudentCertificates")
+  reviewedCerts   Certificate[]  @relation("ReviewerCertificates")
+  credits         Credit[]
+  notifications   Notification[]
+
+  @@map("users")
+}
+
+/// Club model — student clubs/organizations tied to departments.
+/// Each club has a faculty mentor and members.
+model Club {
+  id              String   @id @default(uuid())
+  name            String   @unique
+  type            String   // e.g., "technical", "cultural", "sports"
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  members         User[]   @relation("ClubMembers")
+  events          Event[]
+  facultyMentor   User?    @relation("ClubFacultyMentor", fields: [facultyMentorId], references: [id])
+  facultyMentorId String?
+
+  @@map("clubs")
+}
+
+/// Event model — represents activities like workshops, hackathons, fests.
+/// Events follow an approval workflow: PENDING → APPROVED/REJECTED.
+model Event {
+  id                String        @id @default(uuid())
+  name              String
+  description       String
+  venue             String
+  date              DateTime
+  durationHours     Float
+  category          EventCategory
+  status            EventStatus   @default(PENDING)
+  registrationLimit Int?
+  qrToken           String?       @unique // Unique token for QR-based attendance
+  rejectionReason   String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  club              Club          @relation(fields: [clubId], references: [id])
+  clubId            String
+  registrations     Registration[]
+  attendances       Attendance[]
+
+  @@map("events")
+}
+
+/// Registration model — tracks student registrations for events.
+/// A student can only register once per event.
+model Registration {
+  id           String   @id @default(uuid())
+  status       String   @default("registered") // registered, cancelled
+  registeredAt DateTime @default(now())
+
+  // Relations
+  student      User     @relation(fields: [studentId], references: [id])
+  studentId    String
+  event        Event    @relation(fields: [eventId], references: [id])
+  eventId      String
+
+  @@unique([studentId, eventId])
+  @@map("registrations")
+}
+
+/// Attendance model — records student attendance at events.
+/// Supports QR scanning and Excel upload methods.
+model Attendance {
+  id        String           @id @default(uuid())
+  method    AttendanceMethod
+  present   Boolean          @default(false)
+  loggedAt  DateTime         @default(now())
+
+  // Relations
+  student   User             @relation(fields: [studentId], references: [id])
+  studentId String
+  event     Event            @relation(fields: [eventId], references: [id])
+  eventId   String
+
+  @@unique([studentId, eventId])
+  @@map("attendances")
+}
+
+/// Certificate model — external course/workshop certificates uploaded by students.
+/// Verified via OCR and AI analysis, then reviewed by faculty mentor.
+model Certificate {
+  id                 String            @id @default(uuid())
+  fileUrl            String
+  courseName         String
+  organization       String
+  completionDate     DateTime?
+  hoursClaimed       Float
+  ocrExtractedData   Json?             // Raw OCR output from AI service
+  status             CertificateStatus @default(PENDING)
+  aiFlags            Json?             // { duplicate: false, fakeRisk: false }
+  reviewNotes        String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  // Relations
+  student            User              @relation("StudentCertificates", fields: [studentId], references: [id])
+  studentId          String
+  reviewedBy         User?             @relation("ReviewerCertificates", fields: [reviewedByMentorId], references: [id])
+  reviewedByMentorId String?
+
+  @@map("certificates")
+}
+
+/// Credit model — AICTE activity credit records.
+/// Credits are allocated from events (attendance) and certificates (verified hours).
+/// AICTE points formula: hours / 4.
+model Credit {
+  id          String       @id @default(uuid())
+  hours       Float
+  aictePoints Float        // hours / 4
+  source      CreditSource
+  sourceId    String       // eventId or certificateId
+  allocatedAt DateTime     @default(now())
+
+  // Relations
+  student     User         @relation(fields: [studentId], references: [id])
+  studentId   String
+
+  @@map("credits")
+}
+
+/// Notification model — in-app notifications for users.
+/// Tracks read/unread status for each notification.
+model Notification {
+  id        String           @id @default(uuid())
+  message   String
+  type      NotificationType @default(GENERAL)
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  // Relations
+  user      User             @relation(fields: [userId], references: [id])
+  userId    String
+
+  @@map("notifications")
+}
