@@ -28,7 +28,7 @@ export function RoleDashboard({ view }: RoleDashboardProps) {
   return (
     <AppShell view={view}>
       <div className="space-y-6">
-        <section className="grid gap-6 rounded-[2rem] border border-border bg-surface/80 p-6 shadow-[0_24px_90px_rgba(4,8,24,0.35)] lg:grid-cols-[1.15fr_0.85fr] lg:p-8">
+        <section className="grid gap-6 rounded-[2rem] border border-border bg-surface/90 p-6 shadow-[0_24px_90px_rgba(15,23,42,0.08)] lg:grid-cols-[1.15fr_0.85fr] lg:p-8">
           <div className="space-y-5">
             <Badge className="w-fit">Foundation phase</Badge>
             <div className="space-y-3">
@@ -45,7 +45,7 @@ export function RoleDashboard({ view }: RoleDashboardProps) {
                 </Button>
               ))}
             </div>
-            <div className="rounded-3xl border border-border bg-background/45 p-4 text-sm text-muted">
+            <div className="rounded-3xl border border-border bg-background/50 p-4 text-sm text-muted">
               <div className="flex items-center gap-2 text-primary">
                 <Sparkles className="h-4 w-4" />
                 <span className="font-medium uppercase tracking-[0.22em]">Mock JSON only</span>
@@ -54,7 +54,7 @@ export function RoleDashboard({ view }: RoleDashboardProps) {
             </div>
           </div>
 
-          <Card className="self-start">
+              <Card className="self-start">
             <CardHeader>
               <CardTitle>{view.user.name}</CardTitle>
               <CardDescription>{view.user.email}</CardDescription>

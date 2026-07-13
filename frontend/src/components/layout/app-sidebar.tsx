@@ -48,7 +48,7 @@ export function AppSidebar({ role, user, open, onClose }: AppSidebarProps) {
     <>
       <div
         className={cn(
-          'fixed inset-0 z-30 bg-slate-950/60 backdrop-blur-sm transition-opacity lg:hidden',
+          'fixed inset-0 z-30 bg-slate-900/20 backdrop-blur-sm transition-opacity lg:hidden',
           open ? 'opacity-100' : 'pointer-events-none opacity-0',
         )}
         onClick={onClose}
@@ -56,7 +56,7 @@ export function AppSidebar({ role, user, open, onClose }: AppSidebarProps) {
       />
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-40 w-[290px] border-r border-border bg-surface/95 px-4 py-5 shadow-2xl transition-transform lg:static lg:z-auto lg:translate-x-0 lg:shadow-none',
+          'fixed inset-y-0 left-0 z-40 w-[290px] border-r border-border bg-surface/95 px-4 py-5 shadow-xl shadow-slate-200/60 transition-transform lg:static lg:z-auto lg:translate-x-0 lg:shadow-none',
           open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         )}
       >

@@ -92,7 +92,7 @@ export function LoginForm() {
             <p>• Student, Faculty, HOD, and Committee dashboard shells.</p>
             <p>• Shared sidebar and navbar built for the App Router.</p>
             <p>• Placeholder routes for future features without business logic.</p>
-            <p>• Strong dark theme and reusable UI primitives.</p>
+            <p>• Clean light theme and reusable UI primitives.</p>
           </CardContent>
         </Card>
 

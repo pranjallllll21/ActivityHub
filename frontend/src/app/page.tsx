@@ -55,7 +55,7 @@ export default function Home() {
               <CardDescription>Reusable shell components and route placeholders already exist for the main roles.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-muted">
-              <p>• Dark themed global layout with custom surface layers.</p>
+              <p>• Light themed global layout with custom surface layers.</p>
               <p>• Sidebar and navbar for the dashboard experience.</p>
               <p>• Student, Faculty, HOD, and Committee dashboard roots.</p>
               <p>• Login UI with mock accounts and no API wiring.</p>
